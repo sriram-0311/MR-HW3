@@ -48,3 +48,4 @@ if __name__ == "__main__":
     print("edges and cost of travel dict = ",edges)
     G = createGraph(nodes, edges)
     drawGraph(G)
+

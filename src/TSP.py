@@ -58,6 +58,17 @@ def dpTSPHelper(graph, s, visited, memo):
     memo[s][visited] = ans
     return ans
 
+def TSP(graph, s):
+    n = len(graph)
+    visited = []
+    queue = []
+
+    visited.append(s)
+    queue.append([1,2,3])
+    for i in range(n):
+        for j in queue:
+            
+
 if __name__ == "__main__":
     graph = [[0, 2, 1, 1], [2, 0, 1, 1], [1, 2, 0, 1], [1, 1, 2, 0]]
     s = 0
