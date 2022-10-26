@@ -1,9 +1,10 @@
-from random import sample
 import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
 from PIL import Image
 import math
+
+from torch import is_tensor
 
 neighbor_map = [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]
 
@@ -28,6 +29,8 @@ def Neighbours(graph, v):
     return neighbors
 
 def reachabilityCheck(occupancyGrid, v1, v2):
+    print("v1: ", v1)
+    print("v2: ", v2)
     current = v1
     while current != v2:
         neighbors = Neighbours(occupancyGrid, current)
@@ -54,15 +57,20 @@ class PRM():
             self.addVertex(sampleVertex, i)
         #print("sampleV", sampleSetVertices)
     def addVertex(self, sampleVertex, itr):
-        self.graph.add_node(itr, {'pos': sampleVertex})
+        #print("sampleVertex", sampleVertex)
+        self.graph.add_node(itr, pos=sampleVertex)
+        # print("graph", self.graph.nodes[itr]['pos'])
+        # print("graph", self.graph.nodes[itr]['pos'])
         for v in self.graph.nodes:
-            if v != sampleVertex:
-                if reachabilityCheck(self.occupancy_grid, sampleVertex, v):
-                    self.graph.add_edge(v[0],itr, weight=math.dist(sampleVertex, v[1]['pos']))
+            print("v", v)
+            if self.graph.nodes[v]['pos'] != sampleVertex:
+                if (reachabilityCheck(self.occupancy_grid, sampleVertex, self.graph.nodes[v]['pos'])) and (math.dist(sampleVertex, self.graph.nodes[v]['pos']) <= self.maxDistance):
+                    self.graph.add_edge(self.graph.nodes[v][0],itr, weight=math.dist(sampleVertex, self.graph.nodes[v]['pos']))
             else:
                 return
         return None
 
 if __name__ == "__main__":
-    prm = PRM(10, 1)
+    prm = PRM(2500, 75)
     prm.build_graph()
+    nx.draw_networkx(prm.graph)
