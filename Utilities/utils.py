@@ -2,6 +2,21 @@ from ast import Num
 from lib2to3.pytree import Node
 from tkinter import N
 import numpy as np
+from PIL import Image
+import numpy as np
+import os, sys
+
+def convertToBinary():
+    #current directory printing
+    print("Current Directory: ", os.getcwd())
+    #read image
+    occupancyGrid = np.array(Image.open('/Users/anushsriramramesh/Library/CloudStorage/OneDrive-NortheasternUniversity/MR/MR-HW3/Utilities/occupancy_map.png'))
+    #convert to binary
+    occupancyGrid = np.where(occupancyGrid > 0, 1, 0)
+
+    return occupancyGrid
+
+
 
 def createNodesAndEdges(N):
     NodesList = []
@@ -27,6 +42,13 @@ def createNodesAndEdges(N):
     return NodesList, EdgeDict
 
 if __name__ == "__main__":
-    nodes, edges = createNodesAndEdges(4)
-    print("Nodes list = ",nodes)
-    print("edges and cost of travel dict = ",edges)
+    # nodes, edges = createNodesAndEdges(4)
+    # print("Nodes list = ",nodes)
+    # print("edges and cost of travel dict = ",edges)
+    occupancyGrid = convertToBinary()
+    # for i in range(len(occupancyGrid)):
+    #     for j in range(len(occupancyGrid[i])):
+    #         if occupancyGrid[i][j] > 0:
+    #             print("1", end = " ")
+    print(occupancyGrid)
+
