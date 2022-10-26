@@ -139,6 +139,8 @@ if __name__ == "__main__":
     grid[np.where(grid>0)] = 255
     for x in finalPath:
         grid[x[0]][x[1]]=50
+
+    plt.imshow(grid, cmap='Dark2',  origin='upper')
     print("img show")
     # img = cv2.imread('/Users/anushsriramramesh/Library/CloudStorage/OneDrive-NortheasternUniversity/MR/MR-HW3/Utilities/occupancy_map.png')
     # for x in finalPath:
@@ -157,6 +159,7 @@ if __name__ == "__main__":
     # im = Image.fromarray(grid)
     # im.save("your_file.jpeg")
     matplotlib.image.imsave('path.png', grid)
+    plt.show()
     # scipy.misc.imsave('outfile.jpg', grid)
     # print(neighbors)
     # print(dis)
