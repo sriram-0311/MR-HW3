@@ -114,19 +114,21 @@ class PRM():
         if (start != goal):
             if start not in poses:
                 print("Start or Goal not in graph")
+                startind = self.graph.number_of_nodes() +1
                 self.addVertex(start, self.graph.number_of_nodes() +1)
                 print("added start")
             if goal not in poses:
+                stopindex = self.graph.number_of_nodes() +1
                 self.addVertex(goal, self.graph.number_of_nodes() +1)
                 print("added goal")
-            path = nx.astar_path(self.graph, 2001, 2002)
+            path = nx.astar_path(self.graph, startind, stopindex)
             return path
         else:
             return None
 
 if __name__ == "__main__":
-    prm = PRM(10000, 75)
-    prm.build_graph(2000)
+    prm = PRM(5000, 75)
+    prm.build_graph(5000)
     start = (635,140)
     goal = (350,400)
     path = prm.aStartSearch(start, goal)
@@ -153,7 +155,8 @@ if __name__ == "__main__":
     for i in range(len(path)):
         #plt.plot(prm.graph.nodes[path[i]]['pos'][0], prm.graph.nodes[path[i]]['pos'][1], 'ro',alpha=1)
         if i < len(path)-1:
-            plt.plot([prm.graph.nodes[path[i]]['pos'][0],prm.graph.nodes[path[i+1]]['pos'][0]], [prm.graph.nodes[path[i]]['pos'][1],prm.graph.nodes[path[i+1]]['pos'][1]], 'r',alpha=1)
-    nx.draw_networkx(prm.graph, pos=nx.get_node_attributes(prm.graph, 'pos'), with_labels=False, width=0.2, node_size=0.2)
+            #plt.plot([prm.graph.nodes[path[i]]['pos'][0],prm.graph.nodes[path[i+1]]['pos'][0]], [prm.graph.nodes[path[i]]['pos'][1],prm.graph.nodes[path[i+1]]['pos'][1]], 'r',alpha=1)
+            nx.draw_networkx_edges(prm.graph, pos=nx.get_node_attributes(prm.graph, 'pos'), edgelist=[(path[i], path[i+1])], width=2, alpha=0.5, edge_color='g')
+    nx.draw_networkx_nodes(prm.graph, pos=nx.get_node_attributes(prm.graph, 'pos'),node_size=0.2)
     plt.savefig('prm.png')
     plt.show()
