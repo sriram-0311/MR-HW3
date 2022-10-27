@@ -6,8 +6,8 @@ from PIL import Image
 
 G = nx.Graph()
 G.add_node(1,pos=(0, 0))
-G.add_node(1,pos=(1, 0))
-G.add_node(1,pos=(2, 0))
+G.add_node(2,pos=(1, 0))
+G.add_node(3,pos=(2, 0))
 
 # x = range(0, 650)
 # y = range(0,340)
@@ -23,6 +23,11 @@ G.add_node(1,pos=(2, 0))
 
 # print(x)
 # print(y)
+
+if not((0,0) in G.nodes()):
+    print("yes")
+else:
+    print("no")
 
 for i in G.nodes:
     print(G.nodes[i]['pos'])
