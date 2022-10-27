@@ -105,16 +105,21 @@ class PRM():
             return
 
     def aStartSearch(self, start, goal):
+        print("start", start)
+        print("goal", goal)
         path = []
+        poses = []
+        for i in prm.graph.nodes.data('pos'):
+            poses.append(i[1])
         if (start != goal):
-            if start not in self.graph.nodes:
+            if start not in poses:
                 print("Start or Goal not in graph")
                 self.addVertex(start, self.graph.number_of_nodes() +1)
                 print("added start")
-            if goal not in self.graph.nodes:
+            if goal not in poses:
                 self.addVertex(goal, self.graph.number_of_nodes() +1)
                 print("added goal")
-            #path = nx.astar_path(self.graph, start, goal, heuristic=math.dist, weight='weight')
+            path = nx.astar_path(self.graph, 2001, 2002)
             return path
         else:
             return None
@@ -122,18 +127,33 @@ class PRM():
 if __name__ == "__main__":
     prm = PRM(10000, 75)
     prm.build_graph(2000)
-    path = prm.aStartSearch((600,200), (350, 400))
-    if (635,140) in prm.graph.nodes:
+    start = (635,140)
+    goal = (350,400)
+    path = prm.aStartSearch(start, goal)
+    # print("graph", prm.graph.nodes)
+    # print("start in graph", prm.graph.nodes.data('pos'))
+    # print("start in graph", prm.graph.nodes[2002]['pos'])
+    print("PATHHHHH",path)
+    poses = []
+    for i in prm.graph.nodes.data('pos'):
+        poses.append(i[1])
+    if start in poses:
         print("True")
     else:
         print("False")
     grid = load_occupancy_map()
     grid[np.where(grid>0)] = 255
+    for i in path:
+        grid[prm.graph.nodes[i]['pos'][0]][prm.graph.nodes[i]['pos'][1]] = 127
     plt.imshow(np.transpose(grid), cmap="inferno", origin='lower')
     # print("graph", prm.graph.number_of_nodes())
     # print("graph", prm.graph.number_of_edges())
     # for v in prm.graph.nodes:
     #     plt.plot(prm.graph.nodes[v]['pos'][1], prm.graph.nodes[v]['pos'][0], 'r',alpha=0.2)
+    for i in range(len(path)):
+        #plt.plot(prm.graph.nodes[path[i]]['pos'][0], prm.graph.nodes[path[i]]['pos'][1], 'ro',alpha=1)
+        if i < len(path)-1:
+            plt.plot([prm.graph.nodes[path[i]]['pos'][0],prm.graph.nodes[path[i+1]]['pos'][0]], [prm.graph.nodes[path[i]]['pos'][1],prm.graph.nodes[path[i+1]]['pos'][1]], 'r',alpha=1)
     nx.draw_networkx(prm.graph, pos=nx.get_node_attributes(prm.graph, 'pos'), with_labels=False, width=0.2, node_size=0.2)
     plt.savefig('prm.png')
     plt.show()
