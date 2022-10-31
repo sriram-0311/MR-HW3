@@ -26,6 +26,9 @@ def load_occupancy_map():
 	occupancy_grid = (np.asarray(occupancy_map_img) > 0).astype(int)
 	return occupancy_grid
 
+#Neighbour function : takes in occupancy grid and current vertex as input and return the list of neighbours of #the current vertex as a list of tuples. [(N1),(n2),(n3),...]
+#graph : occupancy grid
+#v : current vertex
 def Neighbours(graph, v):
     neighbors = []
     for x,y in neighbor_map:
@@ -34,7 +37,8 @@ def Neighbours(graph, v):
             neighbors.append(search_point)
     return neighbors
 
-
+#distance(v1,v2) : returns the distance between two vertices v1 and v2
+#v1 : vertex 1
 def distance(v1, v2):
     return math.dist(v1, v2)
 class AStar:
@@ -63,8 +67,11 @@ class AStar:
         self.costTo[start] = 0
         self.estTotalCost[start] = distance(start, goal)
 
+    #Recover path from start to goal using predecessor dictionary
+    #start : start point of the path
+    #goal : goal point of the path
+    #pred : predecessor dictionary returned from astar search function
     def RecoverPath(self, start, goal, pred):
-        #self.path, self.visited, self.cost, self.nodes, self.edges = self.a_star(self.graph, self.start, self.goal)
         current = goal
         retracedPath = []
         retracedPath.append(goal)
@@ -82,49 +89,39 @@ class AStar:
 
         for i in range(len(retracedPath) - 1):
             totalCost = totalCost + distance(retracedPath[i], retracedPath[i+1])
-        # if len(self.pred) == 0:
-        #     self.path = None
-        # elif len(self.pred) == 1:
-        #     self.path = [pred[goal], start]
-        # else:
-        #     if pred[goal] == start:
-        #         self.path.append(start)
-        #         return self.path
-        #     self.path.append(pred[goal])
-        #     self.RecoverPath(start, pred[goal], pred)
-        # end = time.time()
-        #return array with all vertices from start to goal
         return retracedPath, totalCost
 
-    def a_star(self):
-        while self.Q != []:
-            v = heapq.heappop(self.Q)[1]
-            del self.Qhelper[v]
-            if v == self.goal:
-                print("goal found")
-                return self.RecoverPath(self.start, self.goal, self.pred)
-            #print("neighbors of ", v, " = ", Neighbours(self.graph, v))
-            for n in Neighbours(self.graph,v):
-                #print("n = ", n)
-                pvi = self.costTo[v] + distance(v, n)
-                if pvi < self.costTo[n]:
-                    #The path to i through v is better than the previously-known best path to i,
-                    # so record it as the new best path to i.
-                    self.pred[n] = v
-                    self.costTo[n] = pvi
-                    self.estTotalCost[n] = pvi + distance(n, self.goal)
-                    if n in self.Qhelper:
-                        tmpVal = self.Qhelper[n]
-                        self.Q.remove((tmpVal, n ))
-                        heapq.heappush(self.Q, (self.estTotalCost[n], n))
-                        self.Qhelper[n] = self.estTotalCost[n]
-                    else:
-                        heapq.heappush(self.Q, (self.estTotalCost[n], n))
-                        self.Qhelper[n] = self.estTotalCost[n]
-
-
-
-        return []
+#Astar search algorithm
+#graph : occupancy grid
+#start : start point of the path
+#goal : goal point of the path
+#Function is implemented as a member function of the class AStar
+def a_star(self):
+while self.Q != []:
+    v = heapq.heappop(self.Q)[1]
+    del self.Qhelper[v]
+    if v == self.goal:
+        print("goal found")
+        return self.RecoverPath(self.start, self.goal, self.pred)
+    #print("neighbors of ", v, " = ", Neighbours(self.graph, v))
+    for n in Neighbours(self.graph,v):
+        #print("n = ", n)
+        pvi = self.costTo[v] + distance(v, n)
+        if pvi < self.costTo[n]:
+            #The path to i through v is better than the previously-known best path to i,
+            # so record it as the new best path to i.
+            self.pred[n] = v
+            self.costTo[n] = pvi
+            self.estTotalCost[n] = pvi + distance(n, self.goal)
+            if n in self.Qhelper:
+                tmpVal = self.Qhelper[n]
+                self.Q.remove((tmpVal, n ))
+                heapq.heappush(self.Q, (self.estTotalCost[n], n))
+                self.Qhelper[n] = self.estTotalCost[n]
+            else:
+                heapq.heappush(self.Q, (self.estTotalCost[n], n))
+                self.Qhelper[n] = self.estTotalCost[n]
+return []
 
 if __name__ == "__main__":
     #occupancyGrid = utils.convertToBinary()

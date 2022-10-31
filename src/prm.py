@@ -14,9 +14,15 @@ def SaveFigs(path, graph, totalCost, start, goal):
     occupancygrid = load_occupancy_map()
     occupancygrid[np.where(occupancygrid>0)] = 255
     plt.imshow(np.transpose(occupancygrid), cmap="inferno", origin='lower')
-    nx.draw_networkx(graph, pos=nx.get_node_attributes(graph, 'pos'),node_size=0.2, with_labels=False)
-    plt.legend(title='PRM Graph - 2500 nodes', loc= 'upper center', bbox_to_anchor=(0.5, 1.05), ncol=3, fancybox=True, shadow=True)
-    plt.savefig('PRMGraph.png', dpi=500)
+    nx.draw_networkx_nodes(graph, pos=nx.get_node_attributes(graph, 'pos'),node_size=0.2)
+    plt.legend(title='PRM Graph - 2500 nodes alone', loc= 'upper center', bbox_to_anchor=(0.5, 1.05), ncol=3, fancybox=True, shadow=True)
+    plt.savefig('PRMGraph_Nodes.png', dpi=500)
+    plt.close()
+    plt.imshow(np.transpose(occupancygrid), cmap="inferno", origin='lower')
+    nx.draw_networkx_nodes(graph, pos=nx.get_node_attributes(graph, 'pos'),node_size=0.2)
+    nx.draw_networkx_edges(graph, pos=nx.get_node_attributes(graph, 'pos'),width=0.01)
+    plt.legend(title='PRM Graph - 2500 nodes and edges', loc= 'upper center', bbox_to_anchor=(0.5, 1.05), ncol=3, fancybox=True, shadow=True)
+    plt.savefig('PRMGraph_NodesEdges.png', dpi=500)
     plt.close()
     for i in range(len(path)):
         #plt.plot(prm.graph.nodes[path[i]]['pos'][0], prm.graph.nodes[path[i]]['pos'][1], 'ro',alpha=1)
@@ -25,6 +31,7 @@ def SaveFigs(path, graph, totalCost, start, goal):
             nx.draw_networkx_edges(graph, pos=nx.get_node_attributes(graph, 'pos'), edgelist=[(path[i], path[i+1])], width=2, alpha=0.5, edge_color='g')
     plt.plot(start[0], start[1], 'go',alpha=1, label='Start')
     plt.plot(goal[0], goal[1], 'ro',alpha=1, label='Goal')
+    nx.draw_networkx_nodes(graph, pos=nx.get_node_attributes(graph, 'pos'),node_size=0.1)
     plt.imshow(np.transpose(occupancygrid), cmap="inferno", origin='lower')
     plt.legend(title='PRM Graph with Astar path with total length - {}'.format(totalCost), loc= 'upper center', bbox_to_anchor=(0.5, 1.05), ncol=3, fancybox=True, shadow=True)
     plt.savefig('PRMGraph_AstarPath.png', dpi=500)
@@ -35,7 +42,10 @@ def load_occupancy_map():
 	occupancy_grid = (np.asarray(occupancy_map_img) > 0).astype(int)
 	return occupancy_grid
 
-def rejectionSampler(occupancyGrid, freeVertices):
+#rejectionSamples(occupancyGrid) : returns a uniformly randomly sampled point from the free space in the occupancy grid
+#occupancyGrid : 2D numpy array of the occupancy grid
+#returns : a tuple of the form (x,y) where x and y are the coordinates of the sampled point
+def rejectionSampler(occupancyGrid):
     while True:
         x = int(np.random.uniform(0, occupancyGrid.shape[0]))
         y = int(np.random.uniform(0, occupancyGrid.shape[1]))
@@ -84,6 +94,11 @@ def Neighbours(graph, v):
         neighbors.append(search_point)
     return neighbors
 
+#reachabilityCheck(occupancyGrid, point1, point2) : checks if there is a line of sight between point1 and point2
+#occupancyGrid : 2D numpy array of the occupancy grid
+#point1 : tuple of the form (x,y) where x and y are the coordinates of the first point
+#point2 : tuple of the form (x,y) where x and y are the coordinates of the second point
+#returns : True if there is a line of sight between point1 and point2, False otherwise
 def reachabilityCheck(occupancyGrid, v1, v2):
     # print("v1: ", v1)
     # print("v2: ", v2)
@@ -92,11 +107,9 @@ def reachabilityCheck(occupancyGrid, v1, v2):
         neighbors = Neighbours(occupancyGrid, current)
         current = min(neighbors, key=lambda x: math.dist(x, v2))
         if occupancyGrid[current] == 0:
-            #print("no path found..")
             return False
         else:
             continue
-    #print("Path found..")
     return True
 
 def reachablity_check(occupancygrid,v1, v2):
@@ -124,37 +137,35 @@ class PRM():
 
         self.freeVertices = []
 
-    def build_graph(self, n):
-        for i in range(n):
-            sampleVertex = rejectionSampler(self.occupancy_grid, self.freeVertices)
-            self.addVertex(sampleVertex, i)
-        #print("sampleV", sampleSetVertices)
-        #print("graph", self.graph.nodes[0])
+#build_graph() : builds the PRM graph using the rejection sampling algorithm for the given number of samples and maximum distance
+#number_of_samples : number of samples to be generated
+#max_distance : maximum distance between two nodes in the graph
+#returns : None
+#updates the graph, vertices and edges attributes of the class PRM
+def build_graph(self, n):
+    for i in range(n):
+        sampleVertex = rejectionSampler(self.occupancy_grid)
+        self.addVertex(sampleVertex, i)
 
-    def addVertex(self, sampleVertex, itr):
-        #print("sampleVertex", sampleVertex)
-        self.graph.add_node(itr, pos=sampleVertex)
-        # print("graph", self.graph.nodes[itr]['pos'])
-        # print("graph", self.graph.nodes[itr]['pos'])
-        if itr > 1:
-            for v in self.graph.nodes:
-
-                #print("v", v)
-                #if self.graph.
-                if (self.graph.nodes[v]['pos'] != sampleVertex) and (math.dist(self.graph.nodes[v]['pos'], sampleVertex) <= self.maxDistance):
-                    # if (reachabilityCheck(self.occupancy_grid, self.graph.nodes[v]['pos'], sampleVertex)):
-                    #     self.graph.add_edge(v,itr, weight=math.dist(sampleVertex, self.graph.nodes[v]['pos']))
-                    #     self.vertices.append(sampleVertex)
-                    if (reachablity_check(self.occupancy_grid, self.graph.nodes[v]['pos'], sampleVertex)):
-                        self.graph.add_edge(v,itr, weight=math.dist(sampleVertex, self.graph.nodes[v]['pos']))
-                        self.vertices.append(sampleVertex)
-                    else:
-                        continue
+#addVertex(vertex, index) : adds a vertex to the graph
+#vertex : tuple of the form (x,y) where x and y are the coordinates of the vertex to be added sampled from the free space
+#itr : index of the vertex to be added
+#returns : None
+def addVertex(self, sampleVertex, itr):
+    self.graph.add_node(itr, pos=sampleVertex)
+    if itr > 1:
+        for v in self.graph.nodes:
+            if (self.graph.nodes[v]['pos'] != sampleVertex) and (math.dist(self.graph.nodes[v]['pos'], sampleVertex) <= self.maxDistance):
+                if (reachablity_check(self.occupancy_grid, self.graph.nodes[v]['pos'], sampleVertex)):
+                    self.graph.add_edge(v,itr, weight=math.dist(sampleVertex, self.graph.nodes[v]['pos']))
+                    self.vertices.append(sampleVertex)
                 else:
                     continue
-            return
-        else:
-            return
+            else:
+                continue
+        return
+    else:
+        return
 
     def aStartSearch(self, start, goal):
         print("start", start)
@@ -211,4 +222,4 @@ if __name__ == "__main__":
     # #plt.plot(label='Total Cost of the path : %d'.format(totalCost))
     # plt.legend(title = "Total Cost of the path : {}".format(totalCost), loc='upper left')
     # plt.savefig('Astar_With_PRM.png', dpi=500)
-    plt.show()
+    #plt.show()
