@@ -1,3 +1,4 @@
+from cProfile import label
 from turtle import width
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,9 +8,26 @@ import math
 from pyparsing import alphas
 import scipy
 
-from torch import is_tensor
-
 neighbor_map = [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]
+
+def SaveFigs(path, graph, totalCost, start, goal):
+    occupancygrid = load_occupancy_map()
+    occupancygrid[np.where(occupancygrid>0)] = 255
+    plt.imshow(np.transpose(occupancygrid), cmap="inferno", origin='lower')
+    nx.draw_networkx(graph, pos=nx.get_node_attributes(graph, 'pos'),node_size=0.2, with_labels=False)
+    plt.legend(title='PRM Graph - 2500 nodes', loc= 'upper center', bbox_to_anchor=(0.5, 1.05), ncol=3, fancybox=True, shadow=True)
+    plt.savefig('PRMGraph.png', dpi=500)
+    plt.close()
+    for i in range(len(path)):
+        #plt.plot(prm.graph.nodes[path[i]]['pos'][0], prm.graph.nodes[path[i]]['pos'][1], 'ro',alpha=1)
+        if i < len(path)-1:
+            #plt.plot([prm.graph.nodes[path[i]]['pos'][0],prm.graph.nodes[path[i+1]]['pos'][0]], [prm.graph.nodes[path[i]]['pos'][1],prm.graph.nodes[path[i+1]]['pos'][1]], 'r',alpha=1)
+            nx.draw_networkx_edges(graph, pos=nx.get_node_attributes(graph, 'pos'), edgelist=[(path[i], path[i+1])], width=2, alpha=0.5, edge_color='g')
+    plt.plot(start[0], start[1], 'go',alpha=1, label='Start')
+    plt.plot(goal[0], goal[1], 'ro',alpha=1, label='Goal')
+    plt.imshow(np.transpose(occupancygrid), cmap="inferno", origin='lower')
+    plt.legend(title='PRM Graph with Astar path with total length - {}'.format(totalCost), loc= 'upper center', bbox_to_anchor=(0.5, 1.05), ncol=3, fancybox=True, shadow=True)
+    plt.savefig('PRMGraph_AstarPath.png', dpi=500)
 
 def load_occupancy_map():
 	# Read image from disk using PIL
@@ -17,16 +35,7 @@ def load_occupancy_map():
 	occupancy_grid = (np.asarray(occupancy_map_img) > 0).astype(int)
 	return occupancy_grid
 
-#sampleSetVertices = [(i,j) for i in range(load_occupancy_map()[0]) for j in range(load_occupancy_map()[1])]
-
 def rejectionSampler(occupancyGrid, freeVertices):
-    uniformProposalFunction = scipy.stats.uniform()
-    # for x in range(occupancyGrid.shape[0]):
-    #     for y in range(occupancyGrid.shape[1]):
-    #         sampleSetVertices.append((x,y))
-
-    #sampleSetVertices = [(i,j) for i in range(occupancyGrid[0]) for j in range(occupancyGrid[1])]
-
     while True:
         x = int(np.random.uniform(0, occupancyGrid.shape[0]))
         y = int(np.random.uniform(0, occupancyGrid.shape[1]))
@@ -34,6 +43,39 @@ def rejectionSampler(occupancyGrid, freeVertices):
             return (x,y)
         else:
             continue
+
+def get_line(x1, y1, x2, y2):
+        points = []
+        issteep = abs(y2-y1) > abs(x2-x1)
+        if issteep:
+            x1, y1 = y1, x1
+            x2, y2 = y2, x2
+        rev = False
+        if x1 > x2:
+            x1, x2 = x2, x1
+            y1, y2 = y2, y1
+            rev = True
+        deltax = x2 - x1
+        deltay = abs(y2-y1)
+        error = int(deltax / 2)
+        y = y1
+        ystep = None
+        if y1 < y2:
+            ystep = 1
+        else:
+            ystep = -1
+        for x in range(x1, x2 + 1):
+            if issteep:
+                points.append((y, x))
+            else:
+                points.append((x, y))
+            error -= deltay
+            if error < 0:
+                y += ystep
+                error += deltax
+        if rev:
+            points.reverse()
+        return points
 
 def Neighbours(graph, v):
     neighbors = []
@@ -57,6 +99,16 @@ def reachabilityCheck(occupancyGrid, v1, v2):
     #print("Path found..")
     return True
 
+def reachablity_check(occupancygrid,v1, v2):
+
+    points = get_line(v1[0],v1[1],v2[0],v2[1])
+
+    for indx in points :
+        for x,y in neighbor_map :
+            search_point = (indx[0]+x,indx[1]+y)
+            if occupancygrid[search_point] == 0:
+                return False
+    return True
 class PRM():
     def __init__(self, N, dmax) -> None:
         super().__init__()
@@ -71,17 +123,13 @@ class PRM():
         self.counter = 0
 
         self.freeVertices = []
-        # for x in range(self.occupancy_grid[0]):
-        #     for y in range(self.occupancy_grid[1]):
-        #         if self.occupancy_grid[x][y] == 1:
-        #             self.freeVertices.append((x,y))
 
     def build_graph(self, n):
         for i in range(n):
             sampleVertex = rejectionSampler(self.occupancy_grid, self.freeVertices)
             self.addVertex(sampleVertex, i)
         #print("sampleV", sampleSetVertices)
-        print("graph", self.graph.nodes[0])
+        #print("graph", self.graph.nodes[0])
 
     def addVertex(self, sampleVertex, itr):
         #print("sampleVertex", sampleVertex)
@@ -90,10 +138,14 @@ class PRM():
         # print("graph", self.graph.nodes[itr]['pos'])
         if itr > 1:
             for v in self.graph.nodes:
+
                 #print("v", v)
                 #if self.graph.
                 if (self.graph.nodes[v]['pos'] != sampleVertex) and (math.dist(self.graph.nodes[v]['pos'], sampleVertex) <= self.maxDistance):
-                    if (reachabilityCheck(self.occupancy_grid, self.graph.nodes[v]['pos'], sampleVertex)):
+                    # if (reachabilityCheck(self.occupancy_grid, self.graph.nodes[v]['pos'], sampleVertex)):
+                    #     self.graph.add_edge(v,itr, weight=math.dist(sampleVertex, self.graph.nodes[v]['pos']))
+                    #     self.vertices.append(sampleVertex)
+                    if (reachablity_check(self.occupancy_grid, self.graph.nodes[v]['pos'], sampleVertex)):
                         self.graph.add_edge(v,itr, weight=math.dist(sampleVertex, self.graph.nodes[v]['pos']))
                         self.vertices.append(sampleVertex)
                     else:
@@ -122,16 +174,17 @@ class PRM():
                 self.addVertex(goal, self.graph.number_of_nodes() +1)
                 print("added goal")
             path = nx.astar_path(self.graph, startind, stopindex)
-            return path
+            totalCost = nx.astar_path_length(self.graph, startind, stopindex)
+            return path, totalCost
         else:
             return None
 
 if __name__ == "__main__":
-    prm = PRM(5000, 75)
-    prm.build_graph(5000)
+    prm = PRM(2500, 75)
+    prm.build_graph(2500)
     start = (635,140)
     goal = (350,400)
-    path = prm.aStartSearch(start, goal)
+    path, totalCost = prm.aStartSearch(start, goal)
     # print("graph", prm.graph.nodes)
     # print("start in graph", prm.graph.nodes.data('pos'))
     # print("start in graph", prm.graph.nodes[2002]['pos'])
@@ -143,20 +196,19 @@ if __name__ == "__main__":
         print("True")
     else:
         print("False")
-    grid = load_occupancy_map()
-    grid[np.where(grid>0)] = 255
-    for i in path:
-        grid[prm.graph.nodes[i]['pos'][0]][prm.graph.nodes[i]['pos'][1]] = 127
-    plt.imshow(np.transpose(grid), cmap="inferno", origin='lower')
+    SaveFigs(path,prm.graph, totalCost, start, goal)
     # print("graph", prm.graph.number_of_nodes())
     # print("graph", prm.graph.number_of_edges())
     # for v in prm.graph.nodes:
     #     plt.plot(prm.graph.nodes[v]['pos'][1], prm.graph.nodes[v]['pos'][0], 'r',alpha=0.2)
-    for i in range(len(path)):
-        #plt.plot(prm.graph.nodes[path[i]]['pos'][0], prm.graph.nodes[path[i]]['pos'][1], 'ro',alpha=1)
-        if i < len(path)-1:
-            #plt.plot([prm.graph.nodes[path[i]]['pos'][0],prm.graph.nodes[path[i+1]]['pos'][0]], [prm.graph.nodes[path[i]]['pos'][1],prm.graph.nodes[path[i+1]]['pos'][1]], 'r',alpha=1)
-            nx.draw_networkx_edges(prm.graph, pos=nx.get_node_attributes(prm.graph, 'pos'), edgelist=[(path[i], path[i+1])], width=2, alpha=0.5, edge_color='g')
-    nx.draw_networkx_nodes(prm.graph, pos=nx.get_node_attributes(prm.graph, 'pos'),node_size=0.2)
-    plt.savefig('prm.png')
+    # for i in range(len(path)):
+    #     #plt.plot(prm.graph.nodes[path[i]]['pos'][0], prm.graph.nodes[path[i]]['pos'][1], 'ro',alpha=1)
+    #     if i < len(path)-1:
+    #         #plt.plot([prm.graph.nodes[path[i]]['pos'][0],prm.graph.nodes[path[i+1]]['pos'][0]], [prm.graph.nodes[path[i]]['pos'][1],prm.graph.nodes[path[i+1]]['pos'][1]], 'r',alpha=1)
+    #         nx.draw_networkx_edges(prm.graph, pos=nx.get_node_attributes(prm.graph, 'pos'), edgelist=[(path[i], path[i+1])], width=2, alpha=0.5, edge_color='g')
+    # nx.draw_networkx_nodes(prm.graph, pos=nx.get_node_attributes(prm.graph, 'pos'),node_size=0.2)
+    # nx.draw_networkx(prm.graph, pos=nx.get_node_attributes(prm.graph, 'pos'),node_size=0.1, width=0.1, with_labels=False)
+    # #plt.plot(label='Total Cost of the path : %d'.format(totalCost))
+    # plt.legend(title = "Total Cost of the path : {}".format(totalCost), loc='upper left')
+    # plt.savefig('Astar_With_PRM.png', dpi=500)
     plt.show()

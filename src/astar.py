@@ -138,9 +138,12 @@ if __name__ == "__main__":
     grid = load_occupancy_map()
     grid[np.where(grid>0)] = 255
     for x in finalPath:
-        grid[x[0]][x[1]]=50
+        plt.plot(x[0], x[1], 'go', alpha=0.1)
 
-    plt.imshow(grid, cmap='Dark2',  origin='upper')
+    plt.plot(astar.start[0], astar.start[1], 'ro', alpha=0.8, label= 'start')
+    plt.plot(astar.goal[0], astar.goal[1], 'bo', alpha=0.8, label= 'goal')
+
+    plt.imshow(np.transpose(grid), cmap="inferno", origin='lower')
     print("img show")
     # img = cv2.imread('/Users/anushsriramramesh/Library/CloudStorage/OneDrive-NortheasternUniversity/MR/MR-HW3/Utilities/occupancy_map.png')
     # for x in finalPath:
@@ -158,8 +161,10 @@ if __name__ == "__main__":
     # cv2.imshow('image', grid)
     # im = Image.fromarray(grid)
     # im.save("your_file.jpeg")
-    matplotlib.image.imsave('path.png', grid)
-    plt.show()
+    # matplotlib.image.imsave('Astar_Path.png', grid)
+    plt.legend(title = "Astar Path with length - {}".format(cost))
+    plt.savefig('Astar_Path.png', dpi=500)
+    #plt.show()
     # scipy.misc.imsave('outfile.jpg', grid)
     # print(neighbors)
     # print(dis)
