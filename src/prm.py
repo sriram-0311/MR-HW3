@@ -112,6 +112,33 @@ def reachabilityCheck(occupancyGrid, v1, v2):
             continue
     return True
 
+def bressenhamReachabilityCheck(v1, v2, occupancyGrid):
+    points = []
+    m_new = 2 * (v2[1] - v1[1])
+    slope_error_new = m_new - (v2[1] - v1[1])
+    y = v1[1]
+    for x in range(v1[0], v2[0]+1):
+        points.append((x,y))
+        #print("(", x, ",", y, ")\n")
+        # Add slope to increment angle formed
+        slope_error_new = slope_error_new + m_new
+        # Slope error reached limit, time to
+        # increment y and update slope error.
+        if (slope_error_new >= 0):
+            y = y+1
+            slope_error_new = slope_error_new - 2 * (v2[0] - v1[0])
+
+    # for point in points:
+    #     if occupancyGrid[point] == 0:
+    #         return False
+
+    for indx in points :
+        for x,y in neighbor_map :
+            search_point = (indx[0]+x,indx[1]+y)
+            if occupancyGrid[search_point] == 0:
+                return False
+    return True
+
 def reachablity_check(occupancygrid,v1, v2):
 
     points = get_line(v1[0],v1[1],v2[0],v2[1])
@@ -137,35 +164,35 @@ class PRM():
 
         self.freeVertices = []
 
-#build_graph() : builds the PRM graph using the rejection sampling algorithm for the given number of samples and maximum distance
-#number_of_samples : number of samples to be generated
-#max_distance : maximum distance between two nodes in the graph
-#returns : None
-#updates the graph, vertices and edges attributes of the class PRM
-def build_graph(self, n):
-    for i in range(n):
-        sampleVertex = rejectionSampler(self.occupancy_grid)
-        self.addVertex(sampleVertex, i)
+    #build_graph() : builds the PRM graph using the rejection sampling algorithm for the given number of samples and maximum distance
+    #number_of_samples : number of samples to be generated
+    #max_distance : maximum distance between two nodes in the graph
+    #returns : None
+    #updates the graph, vertices and edges attributes of the class PRM
+    def build_graph(self, n):
+        for i in range(n):
+            sampleVertex = rejectionSampler(self.occupancy_grid)
+            self.addVertex(sampleVertex, i)
 
-#addVertex(vertex, index) : adds a vertex to the graph
-#vertex : tuple of the form (x,y) where x and y are the coordinates of the vertex to be added sampled from the free space
-#itr : index of the vertex to be added
-#returns : None
-def addVertex(self, sampleVertex, itr):
-    self.graph.add_node(itr, pos=sampleVertex)
-    if itr > 1:
-        for v in self.graph.nodes:
-            if (self.graph.nodes[v]['pos'] != sampleVertex) and (math.dist(self.graph.nodes[v]['pos'], sampleVertex) <= self.maxDistance):
-                if (reachablity_check(self.occupancy_grid, self.graph.nodes[v]['pos'], sampleVertex)):
-                    self.graph.add_edge(v,itr, weight=math.dist(sampleVertex, self.graph.nodes[v]['pos']))
-                    self.vertices.append(sampleVertex)
+    #addVertex(vertex, index) : adds a vertex to the graph
+    #vertex : tuple of the form (x,y) where x and y are the coordinates of the vertex to be added sampled from the free space
+    #itr : index of the vertex to be added
+    #returns : None
+    def addVertex(self, sampleVertex, itr):
+        self.graph.add_node(itr, pos=sampleVertex)
+        if itr > 1:
+            for v in self.graph.nodes:
+                if (self.graph.nodes[v]['pos'] != sampleVertex) and (math.dist(self.graph.nodes[v]['pos'], sampleVertex) <= self.maxDistance):
+                    if (reachabilityCheck(self.occupancy_grid, self.graph.nodes[v]['pos'], sampleVertex)):
+                        self.graph.add_edge(v,itr, weight=math.dist(sampleVertex, self.graph.nodes[v]['pos']))
+                        self.vertices.append(sampleVertex)
+                    else:
+                        continue
                 else:
                     continue
-            else:
-                continue
-        return
-    else:
-        return
+            return
+        else:
+            return
 
     def aStartSearch(self, start, goal):
         print("start", start)
@@ -208,6 +235,15 @@ if __name__ == "__main__":
     else:
         print("False")
     SaveFigs(path,prm.graph, totalCost, start, goal)
+    point1 = (120,240)
+    point2 = (240,500)
+
+    # occupancygrid = load_occupancy_map()
+    # occupancygrid[np.where(occupancygrid>0)] = 255
+    # plt.imshow(np.transpose(occupancygrid), cmap="inferno", origin='lower')
+    # plt.plot([point1[0], point2[0]], [point1[1], point2[1]], 'ro-')
+    # plt.plot()
+    # points = bressenhamReachabilityCheck(point1, point2, prm.occupancy_grid)
     # print("graph", prm.graph.number_of_nodes())
     # print("graph", prm.graph.number_of_edges())
     # for v in prm.graph.nodes:
@@ -222,4 +258,4 @@ if __name__ == "__main__":
     # #plt.plot(label='Total Cost of the path : %d'.format(totalCost))
     # plt.legend(title = "Total Cost of the path : {}".format(totalCost), loc='upper left')
     # plt.savefig('Astar_With_PRM.png', dpi=500)
-    #plt.show()
+    plt.show()

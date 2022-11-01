@@ -39,6 +39,7 @@ def Neighbours(graph, v):
 
 #distance(v1,v2) : returns the distance between two vertices v1 and v2
 #v1 : vertex 1
+#v2 : vertex 2
 def distance(v1, v2):
     return math.dist(v1, v2)
 class AStar:
@@ -91,37 +92,37 @@ class AStar:
             totalCost = totalCost + distance(retracedPath[i], retracedPath[i+1])
         return retracedPath, totalCost
 
-#Astar search algorithm
-#graph : occupancy grid
-#start : start point of the path
-#goal : goal point of the path
-#Function is implemented as a member function of the class AStar
-def a_star(self):
-while self.Q != []:
-    v = heapq.heappop(self.Q)[1]
-    del self.Qhelper[v]
-    if v == self.goal:
-        print("goal found")
-        return self.RecoverPath(self.start, self.goal, self.pred)
-    #print("neighbors of ", v, " = ", Neighbours(self.graph, v))
-    for n in Neighbours(self.graph,v):
-        #print("n = ", n)
-        pvi = self.costTo[v] + distance(v, n)
-        if pvi < self.costTo[n]:
-            #The path to i through v is better than the previously-known best path to i,
-            # so record it as the new best path to i.
-            self.pred[n] = v
-            self.costTo[n] = pvi
-            self.estTotalCost[n] = pvi + distance(n, self.goal)
-            if n in self.Qhelper:
-                tmpVal = self.Qhelper[n]
-                self.Q.remove((tmpVal, n ))
-                heapq.heappush(self.Q, (self.estTotalCost[n], n))
-                self.Qhelper[n] = self.estTotalCost[n]
-            else:
-                heapq.heappush(self.Q, (self.estTotalCost[n], n))
-                self.Qhelper[n] = self.estTotalCost[n]
-return []
+    #Astar search algorithm
+    #graph : occupancy grid
+    #start : start point of the path
+    #goal : goal point of the path
+    #Function is implemented as a member function of the class AStar
+    def a_star(self):
+        while self.Q != []:
+            v = heapq.heappop(self.Q)[1]
+            del self.Qhelper[v]
+            if v == self.goal:
+                print("goal found")
+                return self.RecoverPath(self.start, self.goal, self.pred)
+            #print("neighbors of ", v, " = ", Neighbours(self.graph, v))
+            for n in Neighbours(self.graph,v):
+                #print("n = ", n)
+                pvi = self.costTo[v] + distance(v, n)
+                if pvi < self.costTo[n]:
+                    #The path to i through v is better than the previously-known best path to i,
+                    # so record it as the new best path to i.
+                    self.pred[n] = v
+                    self.costTo[n] = pvi
+                    self.estTotalCost[n] = pvi + distance(n, self.goal)
+                    if n in self.Qhelper:
+                        tmpVal = self.Qhelper[n]
+                        self.Q.remove((tmpVal, n ))
+                        heapq.heappush(self.Q, (self.estTotalCost[n], n))
+                        self.Qhelper[n] = self.estTotalCost[n]
+                    else:
+                        heapq.heappush(self.Q, (self.estTotalCost[n], n))
+                        self.Qhelper[n] = self.estTotalCost[n]
+        return []
 
 if __name__ == "__main__":
     #occupancyGrid = utils.convertToBinary()
@@ -135,7 +136,7 @@ if __name__ == "__main__":
     grid = load_occupancy_map()
     grid[np.where(grid>0)] = 255
     for x in finalPath:
-        plt.plot(x[0], x[1], 'go', alpha=0.1)
+        plt.plot(x[0], x[1], 'go', markersize=0.1)
 
     plt.plot(astar.start[0], astar.start[1], 'ro', alpha=0.8, label= 'start')
     plt.plot(astar.goal[0], astar.goal[1], 'bo', alpha=0.8, label= 'goal')
