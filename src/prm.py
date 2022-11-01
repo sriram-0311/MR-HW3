@@ -128,10 +128,6 @@ def bressenhamReachabilityCheck(v1, v2, occupancyGrid):
             y = y+1
             slope_error_new = slope_error_new - 2 * (v2[0] - v1[0])
 
-    # for point in points:
-    #     if occupancyGrid[point] == 0:
-    #         return False
-
     for indx in points :
         for x,y in neighbor_map :
             search_point = (indx[0]+x,indx[1]+y)
@@ -223,9 +219,6 @@ if __name__ == "__main__":
     start = (635,140)
     goal = (350,400)
     path, totalCost = prm.aStartSearch(start, goal)
-    # print("graph", prm.graph.nodes)
-    # print("start in graph", prm.graph.nodes.data('pos'))
-    # print("start in graph", prm.graph.nodes[2002]['pos'])
     print("PATHHHHH",path)
     poses = []
     for i in prm.graph.nodes.data('pos'):
@@ -237,25 +230,4 @@ if __name__ == "__main__":
     SaveFigs(path,prm.graph, totalCost, start, goal)
     point1 = (120,240)
     point2 = (240,500)
-
-    # occupancygrid = load_occupancy_map()
-    # occupancygrid[np.where(occupancygrid>0)] = 255
-    # plt.imshow(np.transpose(occupancygrid), cmap="inferno", origin='lower')
-    # plt.plot([point1[0], point2[0]], [point1[1], point2[1]], 'ro-')
-    # plt.plot()
-    # points = bressenhamReachabilityCheck(point1, point2, prm.occupancy_grid)
-    # print("graph", prm.graph.number_of_nodes())
-    # print("graph", prm.graph.number_of_edges())
-    # for v in prm.graph.nodes:
-    #     plt.plot(prm.graph.nodes[v]['pos'][1], prm.graph.nodes[v]['pos'][0], 'r',alpha=0.2)
-    # for i in range(len(path)):
-    #     #plt.plot(prm.graph.nodes[path[i]]['pos'][0], prm.graph.nodes[path[i]]['pos'][1], 'ro',alpha=1)
-    #     if i < len(path)-1:
-    #         #plt.plot([prm.graph.nodes[path[i]]['pos'][0],prm.graph.nodes[path[i+1]]['pos'][0]], [prm.graph.nodes[path[i]]['pos'][1],prm.graph.nodes[path[i+1]]['pos'][1]], 'r',alpha=1)
-    #         nx.draw_networkx_edges(prm.graph, pos=nx.get_node_attributes(prm.graph, 'pos'), edgelist=[(path[i], path[i+1])], width=2, alpha=0.5, edge_color='g')
-    # nx.draw_networkx_nodes(prm.graph, pos=nx.get_node_attributes(prm.graph, 'pos'),node_size=0.2)
-    # nx.draw_networkx(prm.graph, pos=nx.get_node_attributes(prm.graph, 'pos'),node_size=0.1, width=0.1, with_labels=False)
-    # #plt.plot(label='Total Cost of the path : %d'.format(totalCost))
-    # plt.legend(title = "Total Cost of the path : {}".format(totalCost), loc='upper left')
-    # plt.savefig('Astar_With_PRM.png', dpi=500)
     plt.show()
