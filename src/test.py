@@ -85,13 +85,63 @@ class A_star_search_driver():
 						self.Q_tracker[nbs]=self.EstCostTo[nbs]
 		return []
 
-searcher = A_star_search_driver([],(635,140),(350,400),N,w,h)
-path = searcher.AStarSearch()
+def DDA(x0, y0, x1, y1):
+ 
+    # find absolute differences
+    dx = abs(x0 - x1)
+    dy = abs(y0 - y1)
+ 
+    # find maximum difference
+    steps = max(dx, dy)
+ 
+    # calculate the increment in x and y
+    xinc = dx/steps
+    yinc = dy/steps
+ 
+    # start with 1st point
+    x = float(x0)
+    y = float(y0)
+ 
+    # make a list for coordinates
+    points = []
+ 
+    for i in range(steps):
+        # append the x,y coordinates in respective list
+        points.append((int(x), int(y)))
+ 
+        # increment the values
+        x = x + xinc
+        y = y + yinc
+ 
+    # plot the line with coordinates list
+    plt.plot(x_coorinates, y_coorinates, marker="o",
+             markersize=1, markerfacecolor="green")
+    plt.show()
+ 
+ 
+# Driver code
+if __name__ == "__main__":
+ 
+    # coordinates of 1st point
+    x0, y0 = 20, 20
+ 
+    # coordinates of 2nd point
+    x1, y1 = 60, 50
+ 
+    # Function call
+    DDA(x0, y0, x1, y1)
 
-occ_map = load_occupancy_map()
-occ_map[np.where(occ_map>0)]=255
-for v in path:
-	occ_map[v[0]][v[1]]=127
+# searcher = A_star_search_driver([],(635,140),(350,400),N,w,h)
+# path = searcher.AStarSearch()
 
-print(occ_map)
-matplotlib.image.imsave('name.png', occ_map)
+# occ_map = load_occupancy_map()
+# occ_map[np.where(occ_map>0)]=255
+# for v in path:
+# 	occ_map[v[0]][v[1]]=127
+
+# print(occ_map)
+# matplotlib.image.imsave('name.png', occ_map)
+
+# dartThrows = np.random.rand(2500, 2,1)
+
+# print(dartThrows)

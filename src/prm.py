@@ -6,7 +6,7 @@ import networkx as nx
 from PIL import Image
 import math
 from pyparsing import alphas
-import scipy
+from bresenham import bresenham
 
 neighbor_map = [(-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)]
 
@@ -54,39 +54,6 @@ def rejectionSampler(occupancyGrid):
         else:
             continue
 
-def get_line(x1, y1, x2, y2):
-        points = []
-        issteep = abs(y2-y1) > abs(x2-x1)
-        if issteep:
-            x1, y1 = y1, x1
-            x2, y2 = y2, x2
-        rev = False
-        if x1 > x2:
-            x1, x2 = x2, x1
-            y1, y2 = y2, y1
-            rev = True
-        deltax = x2 - x1
-        deltay = abs(y2-y1)
-        error = int(deltax / 2)
-        y = y1
-        ystep = None
-        if y1 < y2:
-            ystep = 1
-        else:
-            ystep = -1
-        for x in range(x1, x2 + 1):
-            if issteep:
-                points.append((y, x))
-            else:
-                points.append((x, y))
-            error -= deltay
-            if error < 0:
-                y += ystep
-                error += deltax
-        if rev:
-            points.reverse()
-        return points
-
 def Neighbours(graph, v):
     neighbors = []
     for x,y in neighbor_map:
@@ -100,49 +67,11 @@ def Neighbours(graph, v):
 #point2 : tuple of the form (x,y) where x and y are the coordinates of the second point
 #returns : True if there is a line of sight between point1 and point2, False otherwise
 def reachabilityCheck(occupancyGrid, v1, v2):
-    # print("v1: ", v1)
-    # print("v2: ", v2)
-    current = v1
-    while current != v2:
-        neighbors = Neighbours(occupancyGrid, current)
-        current = min(neighbors, key=lambda x: math.dist(x, v2))
-        if occupancyGrid[current] == 0:
-            return False
-        else:
-            continue
-    return True
-
-def bressenhamReachabilityCheck(v1, v2, occupancyGrid):
-    points = []
-    m_new = 2 * (v2[1] - v1[1])
-    slope_error_new = m_new - (v2[1] - v1[1])
-    y = v1[1]
-    for x in range(v1[0], v2[0]+1):
-        points.append((x,y))
-        #print("(", x, ",", y, ")\n")
-        # Add slope to increment angle formed
-        slope_error_new = slope_error_new + m_new
-        # Slope error reached limit, time to
-        # increment y and update slope error.
-        if (slope_error_new >= 0):
-            y = y+1
-            slope_error_new = slope_error_new - 2 * (v2[0] - v1[0])
-
+    points = bresenham(v1[0],v1[1],v2[0],v2[1])
     for indx in points :
         for x,y in neighbor_map :
             search_point = (indx[0]+x,indx[1]+y)
             if occupancyGrid[search_point] == 0:
-                return False
-    return True
-
-def reachablity_check(occupancygrid,v1, v2):
-
-    points = get_line(v1[0],v1[1],v2[0],v2[1])
-
-    for indx in points :
-        for x,y in neighbor_map :
-            search_point = (indx[0]+x,indx[1]+y)
-            if occupancygrid[search_point] == 0:
                 return False
     return True
 class PRM():
@@ -219,15 +148,5 @@ if __name__ == "__main__":
     start = (635,140)
     goal = (350,400)
     path, totalCost = prm.aStartSearch(start, goal)
-    print("PATHHHHH",path)
-    poses = []
-    for i in prm.graph.nodes.data('pos'):
-        poses.append(i[1])
-    if start in poses:
-        print("True")
-    else:
-        print("False")
     SaveFigs(path,prm.graph, totalCost, start, goal)
-    point1 = (120,240)
-    point2 = (240,500)
     plt.show()
